@@ -1,0 +1,10 @@
+services:
+  backend:
+    build: .
+    container_name: ai-log-intelligence-agent
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - .:/app

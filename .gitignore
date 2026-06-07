@@ -1,0 +1,16 @@
+venv/
+__pycache__/
+*.pyc
+
+logs/
+vectorstore/
+
+*.faiss
+*.pkl
+
+backend/test_*.py
+backend/debug_model.py
+
+.vscode/
+.idea/
+.env
