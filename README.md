@@ -116,12 +116,21 @@ http://localhost:8501
 ```
 
 ---
+## Terraform Infrastructure (Design Only)
+
+Terraform is included as infrastructure-as-code to demonstrate AWS ECS deployment design.
+
+It defines:
+- ECS cluster for container orchestration
+- S3 bucket for log storage
+- CloudWatch log group for monitoring
+
+Note: AWS resources are not deployed due to lack of AWS credentials, but architecture is production-ready.
 
 ## Future Enhancements
 
 * LangGraph Agent Workflow
 * AWS ECS Deployment
-* Terraform Infrastructure
 * CI/CD Pipeline
 * Multi-Log Analysis
 * PDF Report Generation
