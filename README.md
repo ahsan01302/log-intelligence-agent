@@ -129,9 +129,7 @@ Note: AWS resources are not deployed due to lack of AWS credentials, but archite
 
 ## Future Enhancements
 
-* LangGraph Agent Workflow
 * AWS ECS Deployment
-* CI/CD Pipeline
 * Multi-Log Analysis
 * PDF Report Generation
 
