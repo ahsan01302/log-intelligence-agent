@@ -1,5 +1,8 @@
 venv/
+.venv/
 __pycache__/
+.pytest_cache/
+.ruff_cache/
 *.pyc
 
 logs/
@@ -14,3 +17,6 @@ backend/debug_model.py
 .vscode/
 .idea/
 .env
+
+# Runtime data (uploads, index)
+data/
