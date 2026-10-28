@@ -17,7 +17,15 @@ def REPLY(prompt):
     first = re.search(r'<log_chunk id="(C\d+)"', prompt)[1]
     return {
         "insufficient_evidence": False,
-        "hypotheses": [{"cause": "pool exhausted", "confidence": "high", "citations": [first]}],
+        "hypotheses": [
+            {
+                "cause": "pool exhausted",
+                "explanation": "connections exhausted",
+                "confidence": "high",
+                "citations": [first],
+                "next_steps": [],
+            }
+        ],
     }
 
 

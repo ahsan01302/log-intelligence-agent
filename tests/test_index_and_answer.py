@@ -3,7 +3,7 @@ import json
 import pytest
 from conftest import FakeEmbedder, FakeLLM
 
-from log_intel.answer import SYSTEM_PROMPT, answer_question, build_prompt
+from log_intel.answer import SYSTEM_PROMPT, LLMOutput, answer_question, build_prompt
 from log_intel.chunking import build_chunks
 from log_intel.generator import generate
 from log_intel.index import Index, IndexLoadError
@@ -70,6 +70,7 @@ def _reply(citations, insufficient=False, cause="db connection pool exhausted"):
         else [
             {
                 "cause": cause,
+                "explanation": "waiting=57 on a pool of 20",
                 "confidence": "high",
                 "citations": citations,
                 "next_steps": ["raise pool"],
@@ -122,3 +123,23 @@ def test_prompt_fences_logs_and_defuses_closing_tags(chunks):
     prompt = build_prompt("why?", [evil])
     assert prompt.count("</log_chunk>") == 1  # only our own closing tag survives
     assert "untrusted DATA" in SYSTEM_PROMPT
+
+
+def test_schema_sent_to_the_model_requires_citations():
+    # Regression: citations were optional, so Ollama's constrained decoding let qwen3 omit
+    # them, and every correct hypothesis was then dropped as uncited.
+    hyp = LLMOutput.model_json_schema()["$defs"]["LLMHypothesis"]
+    assert {"cause", "explanation", "confidence", "citations", "next_steps"} <= set(hyp["required"])
+    assert hyp["properties"]["citations"]["minItems"] == 1
+
+
+def test_reply_without_citations_is_retried_not_silently_dropped(chunks):
+    no_cites = {
+        "insufficient_evidence": False,
+        "hypotheses": [
+            {"cause": "pool", "explanation": "", "confidence": "high", "next_steps": []}
+        ],
+    }
+    llm = FakeLLM(no_cites, _reply(["C1"]))
+    assert answer_question("why?", _hits(chunks), llm).status == "answered"
+    assert len(llm.calls) == 2
