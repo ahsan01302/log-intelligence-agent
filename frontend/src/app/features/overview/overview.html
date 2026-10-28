@@ -1,0 +1,85 @@
+@let health = store.health();
+
+<header class="page-head">
+  <div>
+    <h1>New investigation</h1>
+    <p class="subtle">
+      Upload logs, ask what went wrong, and check every answer against the cited lines.
+    </p>
+  </div>
+</header>
+
+<div class="stats">
+  <div class="stat">
+    <span class="stat-label">Files indexed</span>
+    <span class="stat-value">{{ health?.files ?? '–' }}</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Log chunks</span>
+    <span class="stat-value">{{ health?.chunks ?? '–' }}</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Retrieval</span>
+    <span class="stat-value stat-text">
+      {{ health ? (health.embeddings ? 'Hybrid' : 'Keyword only') : '–' }}
+    </span>
+  </div>
+</div>
+
+<section class="panel" aria-labelledby="upload-title">
+  <h2 id="upload-title" class="panel-title">1. Add logs</h2>
+  <app-upload-dropzone [maxMb]="health?.max_upload_mb ?? 20" />
+</section>
+
+@let inv = investigation;
+
+<section class="panel" aria-labelledby="ask-title">
+  <h2 id="ask-title" class="panel-title">2. Ask a question</h2>
+  <form class="ask" (submit)="$event.preventDefault(); analyze()">
+    <label class="visually-hidden" for="question">Question about your logs</label>
+    <div class="ask-field">
+      <app-icon name="search" />
+      <input
+        id="question"
+        name="question"
+        type="text"
+        maxlength="500"
+        autocomplete="off"
+        placeholder="Why are checkout requests failing?"
+        [ngModel]="inv.draft()"
+        (ngModelChange)="inv.draft.set($event)"
+        [disabled]="inv.analyzing()"
+      />
+    </div>
+    <button type="submit" class="btn-primary" [disabled]="!canAnalyze()">
+      @if (inv.analyzing()) {
+        <span class="spinner" aria-hidden="true"></span> Analyzing… {{ inv.elapsed() }}s
+      } @else {
+        Analyze logs
+      }
+    </button>
+  </form>
+  @if (inv.analyzing()) {
+    <p class="hint">
+      Retrieving evidence and asking the local model. On a CPU this can take a minute. You can
+      switch pages: the analysis keeps running and the Overview icon shows when it's ready.
+    </p>
+  } @else if (noLogs() && health) {
+    <p class="hint">Upload a log file first: there is nothing indexed yet.</p>
+  }
+</section>
+
+@if (inv.state() === 'error' && inv.error()) {
+  <div class="error" role="alert">
+    <app-icon name="alert" />
+    <span>“{{ inv.question() }}”: {{ inv.error() }}</span>
+  </div>
+}
+
+@if (inv.answer(); as answer) {
+  <section class="panel result" aria-labelledby="result-title">
+    <h2 id="result-title" class="panel-title">Analysis</h2>
+    <p class="result-question">“{{ answer.question }}”</p>
+    <app-analysis-result [answer]="answer" />
+  </section>
+}

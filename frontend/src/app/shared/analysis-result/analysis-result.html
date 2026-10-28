@@ -1,0 +1,97 @@
+@let a = answer();
+
+<div class="banner" [attr.data-status]="a.status" role="status">
+  @switch (a.status) {
+    @case ('answered') {
+      <app-icon name="check" />
+      <span>
+        {{ a.hypotheses.length }} hypothesis{{ a.hypotheses.length === 1 ? '' : 'es' }} from
+        <strong>{{ a.model }}</strong
+        >, each backed by cited log lines.
+      </span>
+    }
+    @case ('insufficient_evidence') {
+      <app-icon name="alert" />
+      <span>The logs don't contain enough evidence to answer this. Nothing was guessed.</span>
+    }
+    @case ('degraded') {
+      <app-icon name="alert" />
+      <span>Model unavailable, so these are the most relevant log chunks without a diagnosis.</span>
+    }
+  }
+</div>
+
+@for (h of a.hypotheses; track $index) {
+  <article class="hypothesis">
+    <header class="hypothesis-head">
+      <span class="rank">{{ $index + 1 }}</span>
+      <h3>{{ h.cause }}</h3>
+      <span class="confidence" [attr.data-level]="h.confidence">{{ h.confidence }} confidence</span>
+    </header>
+    @if (h.explanation) {
+      <p class="explanation">{{ h.explanation }}</p>
+    }
+    @if (h.next_steps.length) {
+      <div class="steps">
+        <span class="label">Next steps</span>
+        <ol>
+          @for (step of h.next_steps; track $index) {
+            <li>{{ step }}</li>
+          }
+        </ol>
+      </div>
+    }
+    <div class="cites">
+      <span class="label">Evidence</span>
+      @for (c of h.citations; track c.chunk_id) {
+        <button type="button" class="cite" (click)="jumpTo(c)">
+          {{ c.file }}:{{ c.start_line }}–{{ c.end_line }}
+        </button>
+      }
+    </div>
+  </article>
+}
+
+@if (evidence().length) {
+  <section class="evidence" aria-label="Retrieved log evidence">
+    <h3 class="section-title">
+      Retrieved evidence <span class="count">{{ evidence().length }} chunks, best match first</span>
+    </h3>
+    @for (e of evidence(); track e.chunk_id) {
+      <div
+        class="chunk"
+        [id]="'evidence-' + e.chunk_id"
+        [class.cited]="e.cited"
+        [class.flash]="highlighted() === e.chunk_id"
+      >
+        <button
+          type="button"
+          class="chunk-head"
+          [attr.aria-expanded]="isOpen(e.chunk_id)"
+          (click)="toggle(e.chunk_id)"
+        >
+          <app-icon name="chevron" [size]="14" [class.open]="isOpen(e.chunk_id)" />
+          <span class="chunk-id">{{ e.chunk_id }}</span>
+          <span class="chunk-loc">{{ e.file }}:{{ e.start_line }}–{{ e.end_line }}</span>
+          @if (e.cited) {
+            <span class="tag">cited</span>
+          }
+        </button>
+        @if (isOpen(e.chunk_id)) {
+          <pre
+            class="log"
+          ><code>@for (line of e.lines; track line.number) {<span class="line" [class.cited-line]="line.cited" [attr.data-level]="line.level"><span class="ln">{{ line.number }}</span>{{ line.text }}
+</span>}</code></pre>
+        }
+      </div>
+    }
+  </section>
+}
+
+@if (a.notes.length) {
+  <ul class="notes">
+    @for (note of a.notes; track $index) {
+      <li>{{ note }}</li>
+    }
+  </ul>
+}

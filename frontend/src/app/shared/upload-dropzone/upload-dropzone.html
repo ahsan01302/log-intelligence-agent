@@ -1,0 +1,52 @@
+<label
+  class="zone"
+  [class.dragging]="dragging()"
+  (dragover)="onDragOver($event)"
+  (dragleave)="dragging.set(false)"
+  (drop)="onDrop($event)"
+>
+  <input
+    #picker
+    type="file"
+    accept=".log,.txt"
+    multiple
+    class="visually-hidden"
+    (change)="onPick(picker)"
+  />
+  <app-icon name="upload" [size]="22" />
+  <span class="zone-title">Drop log files here or <span class="link">browse</span></span>
+  <span class="zone-hint">.log or .txt, up to {{ maxMb() }} MB each</span>
+</label>
+
+@if (uploads.items().length) {
+  <ul class="uploads" aria-live="polite">
+    @for (item of uploads.items(); track item.id) {
+      <li class="upload" [attr.data-state]="item.state">
+        <app-icon
+          [name]="item.state === 'error' ? 'alert' : item.state === 'done' ? 'check' : 'file'"
+        />
+        <div class="upload-body">
+          <div class="upload-head">
+            <span class="upload-name">{{ item.name }}</span>
+            <span class="upload-size">{{ formatSize(item.size) }}</span>
+          </div>
+          @if (item.state === 'uploading') {
+            <div
+              class="bar"
+              role="progressbar"
+              [attr.aria-valuenow]="item.progress"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              <span [style.width.%]="item.progress"></span>
+            </div>
+          }
+          <span class="upload-msg">{{ item.message }}</span>
+        </div>
+      </li>
+    }
+  </ul>
+  @if (hasFinished()) {
+    <button type="button" class="btn-text" (click)="uploads.clearFinished()">Clear finished</button>
+  }
+}

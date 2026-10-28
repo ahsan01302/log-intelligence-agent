@@ -1,6 +1,13 @@
+.git
+.github
+.venv
 venv
 __pycache__
 *.pyc
-.git
-logs
-vectorstore
+.pytest_cache
+.ruff_cache
+.env
+data
+evals
+docs
+tests

@@ -1,10 +1,49 @@
+# docker compose up --build   →  UI http://localhost:8080, API docs http://localhost:8000/docs
+# Ports bind to 127.0.0.1 only: the API has no authentication, so it must not be exposed.
 services:
-  backend:
-    build: .
-    container_name: ai-log-intelligence-agent
-
-    ports:
-      - "8000:8000"
-
+  ollama:
+    image: ollama/ollama:0.40.12
     volumes:
-      - .:/app
+      - ollama:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      retries: 12
+
+  # One-shot: downloads the models into the ollama volume, then exits.
+  models:
+    image: ollama/ollama:0.40.12
+    environment:
+      OLLAMA_HOST: ollama:11434
+    entrypoint: ["sh", "-c", "ollama pull qwen3:4b && ollama pull nomic-embed-text"]
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+  api:
+    build: .
+    environment:
+      # To use Ollama on the host instead: LOGINTEL_OLLAMA_BASE_URL=http://host.docker.internal:11434
+      LOGINTEL_OLLAMA_BASE_URL: ${LOGINTEL_OLLAMA_BASE_URL:-http://ollama:11434}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # makes the host reachable on Linux too
+    volumes:
+      - data:/app/data
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"  # API_PORT=8001 if a local API already uses 8000
+    depends_on:
+      models:
+        condition: service_completed_successfully
+
+  # Angular UI built and served by nginx, which proxies /api to the api service.
+  web:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  ollama:
+  data:

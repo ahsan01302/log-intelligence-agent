@@ -1,0 +1,48 @@
+<a class="skip-link" href="#main">Skip to content</a>
+
+<nav class="rail" aria-label="Main">
+  <a routerLink="/" class="rail-logo" aria-label="Log Intelligence Agent home">
+    <span aria-hidden="true">LI</span>
+  </a>
+  @for (item of nav; track item.path) {
+    <a
+      class="rail-item"
+      [routerLink]="item.path"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: item.exact }"
+    >
+      <span class="rail-icon">
+        <app-icon [name]="item.icon" [size]="20" />
+        @if (item.path === '/' && overviewBadge(); as badge) {
+          <span class="badge" [attr.data-badge]="badge" aria-hidden="true"></span>
+        }
+      </span>
+      <span class="rail-label">{{ item.label }}</span>
+      @if (item.path === '/' && overviewBadge(); as badge) {
+        <span class="visually-hidden">
+          {{ badge === 'running' ? '(analysis running)' : '(new result)' }}
+        </span>
+      }
+    </a>
+  }
+</nav>
+
+<div class="frame">
+  <header class="topbar">
+    <span class="app-name">Log Intelligence Agent</span>
+    @if (investigation.analyzing()) {
+      <a routerLink="/" class="running">
+        <span class="spinner" aria-hidden="true"></span>
+        Analyzing… {{ investigation.elapsed() }}s
+      </a>
+    }
+    <span class="model" [attr.data-state]="store.modelState()" role="status" aria-live="polite">
+      <span class="dot" aria-hidden="true"></span>
+      {{ modelLabel() }}
+    </span>
+  </header>
+
+  <main id="main" class="content">
+    <router-outlet />
+  </main>
+</div>

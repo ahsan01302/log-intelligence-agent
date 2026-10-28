@@ -1,0 +1,53 @@
+<header class="page-head">
+  <div>
+    <h1>History</h1>
+    <p class="subtle">Past investigations, saved by the backend in <code>data/history.db</code>.</p>
+  </div>
+</header>
+
+@if (error()) {
+  <div class="error" role="alert">
+    <app-icon name="alert" />
+    <span>{{ error() }}</span>
+    <button type="button" class="btn-text" (click)="load()">Retry</button>
+  </div>
+}
+
+@if (items(); as list) {
+  @if (list.length) {
+    <ul class="list">
+      @for (item of list; track item.id) {
+        <li class="row">
+          <a class="row-link" [routerLink]="['/history', item.id]">
+            <div class="row-main">
+              <span class="question">{{ item.question }}</span>
+              <span class="cause">{{ item.top_cause ?? statusLabel[item.status] }}</span>
+            </div>
+            <div class="row-meta">
+              <span class="pill" [attr.data-status]="item.status">{{
+                statusLabel[item.status]
+              }}</span>
+              <span class="when" [title]="item.created_at">{{ timeAgo(item.created_at) }}</span>
+            </div>
+          </a>
+          <button
+            type="button"
+            class="icon-btn"
+            [attr.aria-label]="'Delete investigation: ' + item.question"
+            (click)="remove(item)"
+          >
+            <app-icon name="trash" [size]="16" />
+          </button>
+        </li>
+      }
+    </ul>
+  } @else {
+    <div class="empty panel">
+      <app-icon name="history" [size]="28" />
+      <p>No investigations yet. Ask a question on the Overview page and it will appear here.</p>
+      <a routerLink="/" class="btn-secondary">Start an investigation</a>
+    </div>
+  }
+} @else if (!error()) {
+  <p class="subtle">Loading…</p>
+}

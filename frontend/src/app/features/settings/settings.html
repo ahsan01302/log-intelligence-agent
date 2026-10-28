@@ -1,0 +1,82 @@
+@let health = store.health();
+@let p = prefs.value();
+
+<header class="page-head">
+  <div>
+    <h1>Settings</h1>
+    <p class="subtle">
+      Server configuration is read-only here. Change it with <code>LOGINTEL_*</code> environment
+      variables.
+    </p>
+  </div>
+</header>
+
+<section class="panel" aria-labelledby="server-title">
+  <h2 id="server-title" class="panel-title">Server</h2>
+  @if (health) {
+    <dl class="config">
+      <dt>Answer model</dt>
+      <dd>{{ health.llm ?? 'none (evidence-only mode)' }}</dd>
+      <dt>Provider</dt>
+      <dd>{{ health.provider }}</dd>
+      <dt>Embedding model</dt>
+      <dd>
+        {{ health.embed_model }} · {{ health.embeddings ? 'active' : 'unavailable, keyword only' }}
+      </dd>
+      <dt>Upload limit</dt>
+      <dd>{{ health.max_upload_mb }} MB per file</dd>
+      <dt>Default results per question</dt>
+      <dd>{{ health.default_top_k }} chunks</dd>
+      <dt>API</dt>
+      <dd>
+        FastAPI on port 8000 (<a href="http://127.0.0.1:8000/docs" target="_blank" rel="noopener"
+          >interactive docs</a
+        >)
+      </dd>
+    </dl>
+  } @else if (store.offline()) {
+    <p class="subtle">The API is not reachable, so the configuration can't be shown.</p>
+  } @else {
+    <p class="subtle">Loading…</p>
+  }
+</section>
+
+<section class="panel" aria-labelledby="prefs-title">
+  <h2 id="prefs-title" class="panel-title">This browser</h2>
+  <p class="subtle prefs-intro">Saved in this browser only and sent with each question.</p>
+
+  <div class="field">
+    <label for="topk">Results per question</label>
+    <input
+      id="topk"
+      type="number"
+      min="1"
+      max="20"
+      [placeholder]="'Server default (' + (health?.default_top_k ?? 5) + ')'"
+      [value]="p.topK ?? ''"
+      (change)="setTopK($any($event.target).value)"
+    />
+    <span class="field-hint">How many log chunks are retrieved and shown to the model (1–20).</span>
+  </div>
+
+  <fieldset class="field">
+    <legend>Retrieval mode</legend>
+    @for (m of modes; track m.value) {
+      <label class="radio">
+        <input
+          type="radio"
+          name="mode"
+          [value]="m.value"
+          [checked]="p.mode === m.value"
+          (change)="prefs.update({ mode: m.value })"
+        />
+        <span>
+          <strong>{{ m.label }}</strong>
+          <span class="field-hint">{{ m.hint }}</span>
+        </span>
+      </label>
+    }
+  </fieldset>
+
+  <button type="button" class="btn-secondary" (click)="prefs.reset()">Reset to defaults</button>
+</section>

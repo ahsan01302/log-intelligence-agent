@@ -1,22 +1,62 @@
-venv/
-.venv/
-__pycache__/
-.pytest_cache/
-.ruff_cache/
-*.pyc
+# --- Secrets and credentials: never commit ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+*.secret
+secrets/
+credentials*.json
+.netrc
+.npmrc
+.pypirc
 
-logs/
+# --- Runtime data: uploads, index, investigation history, generated evals ---
+data/
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+evals/*.json
 vectorstore/
-
 *.faiss
 *.pkl
+logs/
 
-backend/test_*.py
-backend/debug_model.py
+# --- Python ---
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
 
+# --- Node / Angular (frontend/.gitignore has the full list) ---
+node_modules/
+.angular/
+npm-debug.log*
+
+# --- Editors and OS ---
 .vscode/
 .idea/
-.env
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
 
-# Runtime data (uploads, index)
-data/
+# --- Local screenshots and scratch files ---
+acree/
+Screenshot*.png
+*.tmp
+*.bak

@@ -24,8 +24,14 @@ class Settings(BaseSettings):
 
     # Relative paths: resolved against the working directory, never hardcoded.
     index_dir: Path = Path("data/index")
+    history_path: Path = Path("data/history.db")
     upload_dir: Path = Path("data/uploads")
     max_upload_mb: int = Field(default=20, gt=0)
 
     top_k: int = Field(default=5, gt=0)
     window_seconds: int = Field(default=30, gt=0)
+    max_chunk_lines: int = Field(default=40, gt=0)
+    chunk_strategy: Literal["time", "request"] = "time"
+
+    llm_timeout_s: float = Field(default=180.0, gt=0)
+    embed_batch_size: int = Field(default=32, gt=0)

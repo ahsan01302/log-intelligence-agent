@@ -8,7 +8,7 @@ An on-call engineer gets paged and faces thousands of noisy log lines. They need
 *likely* cause quickly, with pointers to the exact lines that support it, so they can
 check it themselves instead of trusting a chatbot.
 
-v1 (this repo's `main`) proved the idea with LangChain + Ollama + FAISS, but it embeds one
+v1 (tag `v1`) proved the idea with LangChain + Ollama + FAISS, but it embeds one
 line per chunk, never indexes uploaded files, gives no citations, has a path-traversal bug
 in `/upload`, loads the index with pickle, and has no tests or evals. v2 fixes that.
 
@@ -24,7 +24,7 @@ Goals
 Non-goals
 - Real-time streaming ingestion, multi-tenant auth, or a production deployment.
 - Automated remediation. The tool only explains; humans act.
-- Using any employer data. Only synthetic logs and public LogHub samples (attributed).
+- Using any employer data. Only self-generated synthetic logs.
 
 ## 3. Architecture
 
@@ -39,12 +39,12 @@ Non-goals
                                                      provider (Ollama default; optional
                                                      Anthropic/OpenAI) ──► structured answer
                                                                          │       (Pydantic)
-                                    FastAPI · Typer CLI · Streamlit ◄────┘
+                                    FastAPI · Typer CLI · Angular ◄──────┘
 ```
 
 Package layout (`src/log_intel/`): `config.py` (pydantic-settings), `generator/`,
 `parsing.py`, `chunking.py`, `index/`, `retrieval.py`, `providers/`, `answer.py`,
-`api.py`, `cli.py`. The v1 `backend/` and `frontend/` stay in place until M6 replaces them.
+`api.py`, `cli.py`, `history.py`. The web UI is an Angular app in `frontend/`.
 
 ### Key decisions
 | Decision | Choice | Why |
@@ -61,8 +61,7 @@ Package layout (`src/log_intel/`): `config.py` (pydantic-settings), `generator/`
 - **Synthetic generator (M2):** seeded, deterministic multi-service logs with injected
   incidents (e.g. DB pool exhaustion, upstream timeout, bad deploy, disk full). Each run
   writes ground-truth labels: incident type, root-cause lines, and time span.
-- **LogHub samples (M2):** small excerpts from the public LogHub dataset, with attribution
-  and licence noted in `data/README.md`.
+- **LogHub (decision):** not bundled. Its datasets are published for research use, and redistributing them in this repo isn't clearly permitted. The parser's fallback handles common LogHub-style formats (leading timestamp + level word), and users can index files they download themselves.
 
 ## 5. Security
 
@@ -86,11 +85,11 @@ Package layout (`src/log_intel/`): `config.py` (pydantic-settings), `generator/`
 | Milestone | Done when |
 |-----------|-----------|
 | M1 | This doc exists; `uv sync` works on Python 3.12; `Settings` loads defaults and env overrides; `uv run pytest` passes; `.env.example` is present |
-| M2 | `log-intel generate --seed N` is deterministic; labels file matches the injected incidents; LogHub sample is attributed; tests pass |
-| M3 | Parser handles the synthetic format and at least one LogHub format; every chunk keeps file + line range; time-window and request-id chunking are tested |
+| M2 | `log-intel generate --seed N` is deterministic; labels file matches the injected incidents; tests pass (LogHub not bundled, see §4) |
+| M3 | Parser handles the synthetic format and a generic timestamp + level fallback; every chunk keeps file + line range; time-window and request-id chunking are tested |
 | M4 | Index saves and loads without pickle; hybrid retrieval beats BM25-only or embeddings-only on hit@5 over the synthetic set (numbers recorded) |
 | M5 | Ollama provider by default; structured answer validated by Pydantic; "insufficient evidence" path and degraded mode tested; injection cases in tests |
-| M6 | `/upload` traversal fixed with a regression test; upload triggers indexing; Typer CLI `index`/`ask`; Streamlit shows citations |
+| M6 | `/upload` traversal fixed with a regression test; upload triggers indexing; Typer CLI `index`/`ask`; the UI shows citations |
 | M7 | Answer eval table in README; CI runs ruff + pytest on 3.12; README has GIF and diagram; review pass done |
 
 ## 8. Honest-claims rules for the README
@@ -98,3 +97,20 @@ Package layout (`src/log_intel/`): `config.py` (pydantic-settings), `generator/`
 - Say "personal project", never "production-ready".
 - Terraform stays labelled "design only, not deployed".
 - LangChain is used at a basic level. Don't claim more.
+
+## 9. Decisions made during the v2 rebuild (2026-10-29)
+
+- **LangChain removed.** The v2 code talks to Ollama, Anthropic and OpenAI over plain HTTP
+  (`httpx`) behind a two-method provider interface. That's fewer dependencies, and the request
+  shape is unit-tested with mocked transports. v1 (tag `v1`) used LangChain.
+- **FAISS replaced** by NumPy cosine search over normalised vectors plus an in-house BM25. At
+  MVP scale (thousands of chunks) this is fast, and it removes the pickle-based persistence.
+- **Terraform removed.** v1 only defined an empty ECS cluster and an unsecured S3 bucket and was
+  never applied. Deployment is local Docker Compose, which is honest about the project's scope.
+- **Re-index on every upload.** All uploaded files are re-parsed and re-embedded, so every file
+  stays searchable. Simple and correct at MVP scale; incremental indexing is future work.
+- **Angular UI replaced Streamlit** (2026-10-29). Streamlit reran the whole script on every
+  interaction and couldn't link citations to highlighted lines. The Angular 22 app
+  (`frontend/`) talks to the same API through a `/api` proxy (dev server or nginx), so the
+  analysis behaviour is unchanged. Investigations are now saved server-side in SQLite
+  (`history.py`) for the History page.

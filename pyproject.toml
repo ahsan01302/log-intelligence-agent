@@ -5,8 +5,17 @@ description = "Log Intelligence Agent v2: cited root-cause hypotheses from logs 
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "fastapi>=0.136",
+    "httpx>=0.28",
+    "numpy>=2.3",
     "pydantic-settings>=2",
+    "python-multipart>=0.0.32",
+    "typer>=0.20",
+    "uvicorn>=0.49",
 ]
+
+[project.scripts]
+log-intel = "log_intel.cli:app"
 
 [build-system]
 requires = ["hatchling"]
@@ -31,3 +40,7 @@ dev = [
     "pytest>=9.2.0",
     "ruff>=0.17.3",
 ]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI and Typer declare parameters through call defaults by design.
+extend-immutable-calls = ["fastapi.File", "typer.Option", "typer.Argument"]

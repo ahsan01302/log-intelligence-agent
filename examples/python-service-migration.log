@@ -1,0 +1,19 @@
+2026-06-07 10:14:02,118 INFO deploy: starting rollout of users-api v4.2.0 (3 replicas)
+2026-06-07 10:14:05,402 INFO alembic.runtime.migration: Running upgrade 9a1c -> b77e, add users.last_login_at NOT NULL
+2026-06-07 10:14:05,977 INFO users_api.main: Uvicorn running on http://0.0.0.0:8080
+2026-06-07 10:14:11,310 INFO users_api.access: GET /users/1042 200 18ms
+2026-06-07 10:14:12,884 ERROR users_api.db: INSERT into users failed
+Traceback (most recent call last):
+  File "/app/users_api/repository.py", line 57, in create_user
+    session.execute(insert(User).values(**payload))
+  File "/app/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2308, in execute
+    raise exc
+sqlalchemy.exc.IntegrityError: (psycopg.errors.NotNullViolation) null value in column "last_login_at" of relation "users" violates not-null constraint
+2026-06-07 10:14:12,886 ERROR users_api.access: POST /users 500 41ms
+2026-06-07 10:14:15,051 ERROR users_api.access: POST /users 500 38ms
+2026-06-07 10:14:15,052 WARNING users_api.db: 2 failed inserts in 3s: NotNullViolation on users.last_login_at
+2026-06-07 10:14:19,640 INFO users_api.access: GET /users/2210 200 15ms
+2026-06-07 10:14:22,207 ERROR users_api.access: POST /users 500 44ms
+2026-06-07 10:14:30,735 WARNING signup_web.client: signup failed for 17 of 17 attempts in the last 30s (HTTP 500 from users-api)
+2026-06-07 10:14:41,092 INFO deploy: rollout of users-api v4.2.0 complete; old replicas terminated
+2026-06-07 10:14:58,513 CRITICAL alerting: signup conversion dropped to 0% after deploy users-api v4.2.0

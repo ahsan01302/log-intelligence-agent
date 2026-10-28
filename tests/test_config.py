@@ -59,8 +59,9 @@ def test_unknown_provider_rejected(monkeypatch):
         Settings()
 
 
-@pytest.mark.parametrize("field,value", [("TOP_K", "0"), ("WINDOW_SECONDS", "0"),
-                                          ("MAX_UPLOAD_MB", "0")])
+@pytest.mark.parametrize(
+    "field,value", [("TOP_K", "0"), ("WINDOW_SECONDS", "0"), ("MAX_UPLOAD_MB", "0")]
+)
 def test_non_positive_numbers_rejected(monkeypatch, field, value):
     monkeypatch.setenv(f"LOGINTEL_{field}", value)
     with pytest.raises(ValidationError):

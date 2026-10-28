@@ -1,0 +1,20 @@
+2026-07-21T08:00:00.214Z INFO  scheduler [req=0f1e2d3c] job weekly-newsletter started audience=184220
+2026-07-21T08:00:01.067Z INFO  notifier [req=0f1e2d3c] enqueued 184220 emails to queue email.outbound
+2026-07-21T08:00:02.390Z INFO  api-gateway [req=1a2b3c4d] POST /v1/auth/password-reset 202 34ms
+2026-07-21T08:00:02.411Z INFO  notifier [req=1a2b3c4d] enqueued password-reset email for user u-55120 (priority=normal)
+2026-07-21T08:00:04.775Z INFO  email-sender [req=2b3c4d5e] sent batch 1/1843 via mailgrid status=250
+2026-07-21T08:00:06.102Z WARN  postgres [req=3c4d5e6f] slow query 1.2s: SELECT * FROM audit_events WHERE created_at > $1
+2026-07-21T08:00:09.548Z INFO  email-sender [req=4d5e6f70] sent batch 2/1843 via mailgrid status=250
+2026-07-21T08:00:12.001Z WARN  email-sender [req=5e6f7081] mailgrid responded 429 Too Many Requests (limit 600/min, retry-after=60s)
+2026-07-21T08:00:12.003Z ERROR email-sender [req=5e6f7081] batch 3/1843 rejected by provider ERR_RATE_LIMITED
+2026-07-21T08:00:12.950Z WARN  email-sender [req=6f708192] mailgrid responded 429 Too Many Requests (retry-after=60s)
+2026-07-21T08:00:13.402Z WARN  email-sender [req=708192a3] retrying immediately (backoff disabled in config email.retry.backoff=false)
+2026-07-21T08:00:13.418Z ERROR email-sender [req=708192a3] batch 3/1843 rejected by provider ERR_RATE_LIMITED
+2026-07-21T08:00:15.660Z WARN  email-sender [req=8192a3b4] mailgrid account suspended sending for 15 minutes after repeated limit violations
+2026-07-21T08:00:18.207Z INFO  api-gateway [req=92a3b4c5] POST /v1/auth/password-reset 202 29ms
+2026-07-21T08:00:18.230Z INFO  notifier [req=92a3b4c5] enqueued password-reset email for user u-77341 (priority=normal)
+2026-07-21T08:00:31.884Z WARN  notifier [req=a3b4c5d6] queue email.outbound depth=183981 oldest=31s (single queue, no priority lanes)
+2026-07-21T08:01:02.519Z WARN  notifier [req=b4c5d6e7] queue email.outbound depth=183995 oldest=62s
+2026-07-21T08:02:10.346Z ERROR support-desk [req=c5d6e7f8] 41 tickets in 2 min: "password reset email never arrived"
+2026-07-21T08:02:44.093Z WARN  alerting [req=d6e7f809] email delivery rate 0/min for 2m (threshold 50/min) paging on-call
+2026-07-21T08:03:00.000Z INFO  api-gateway [req=e7f8091a] GET /v1/health 200 2ms

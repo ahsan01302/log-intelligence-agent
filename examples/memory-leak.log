@@ -1,0 +1,23 @@
+2026-04-02T14:00:01.112Z INFO  api-gateway [req=a1f30c21] GET /v1/reports/daily 200 182ms
+2026-04-02T14:00:03.450Z INFO  report-worker [req=a1f30c21] report job 5512 started rows=48210
+2026-04-02T14:00:05.009Z DEBUG report-worker [req=b7e2d901] heap used=612MB limit=2048MB
+2026-04-02T14:00:09.731Z INFO  api-gateway [req=c90a1be4] GET /v1/health 200 3ms
+2026-04-02T14:00:14.220Z INFO  report-worker [req=a1f30c21] report job 5512 finished in 10.7s
+2026-04-02T14:00:31.540Z DEBUG report-worker [req=d41c7a02] heap used=981MB limit=2048MB
+2026-04-02T14:00:44.003Z INFO  report-worker [req=e2b8f6a3] report job 5513 started rows=51877
+2026-04-02T14:00:59.812Z WARN  report-worker [req=e2b8f6a3] report cache size=1.1GB entries=902114 (eviction disabled)
+2026-04-02T14:01:02.377Z DEBUG report-worker [req=f50d3e14] heap used=1544MB limit=2048MB
+2026-04-02T14:01:05.903Z WARN  report-worker [req=f50d3e14] GC pause 2.8s, heap after GC=1490MB
+2026-04-02T14:01:11.128Z INFO  api-gateway [req=0a7c9b25] GET /v1/reports/weekly 200 4410ms
+2026-04-02T14:01:18.665Z WARN  report-worker [req=1b6e2f36] GC pause 4.1s, heap after GC=1863MB
+2026-04-02T14:01:22.901Z DEBUG report-worker [req=2c5f1a47] heap used=1997MB limit=2048MB
+2026-04-02T14:01:24.310Z ERROR report-worker [req=2c5f1a47] java.lang.OutOfMemoryError: Java heap space
+2026-04-02T14:01:24.311Z ERROR report-worker [req=2c5f1a47]     at com.example.reports.ReportCache.put(ReportCache.java:88)
+2026-04-02T14:01:24.312Z ERROR report-worker [req=2c5f1a47]     at com.example.reports.DailyReport.render(DailyReport.java:142)
+2026-04-02T14:01:25.004Z ERROR kubelet [req=3d4e0b58] container report-worker in pod report-worker-7f9c OOMKilled (exit code 137)
+2026-04-02T14:01:25.880Z INFO  kubelet [req=4e3d9c69] restarting container report-worker (restart count 3)
+2026-04-02T14:01:27.442Z ERROR api-gateway [req=5f2c8d70] GET /v1/reports/daily 503 upstream=report-worker 30012ms
+2026-04-02T14:01:29.016Z ERROR api-gateway [req=6a1b7e81] GET /v1/reports/weekly 503 upstream=report-worker 30008ms
+2026-04-02T14:01:41.733Z INFO  report-worker [req=7b0a6f92] service started version=3.8.1 cache.eviction=disabled
+2026-04-02T14:01:52.190Z DEBUG report-worker [req=8c9f5ea3] heap used=402MB limit=2048MB
+2026-04-02T14:02:03.558Z INFO  api-gateway [req=9d8e4db4] GET /v1/reports/daily 200 233ms
