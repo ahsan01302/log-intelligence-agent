@@ -45,6 +45,11 @@ class OllamaLLM:
         self.name = f"ollama/{settings.llm_model}"
         self.model = settings.llm_model
         self.url = settings.ollama_base_url.rstrip("/") + "/api/chat"
+        self.options = {
+            "temperature": 0,
+            "num_ctx": settings.llm_num_ctx,
+            "num_predict": settings.llm_max_tokens,
+        }
         self.client = client or httpx.Client(timeout=settings.llm_timeout_s)
 
     def complete_json(self, system: str, user: str, schema: dict[str, Any]) -> str:
@@ -60,7 +65,7 @@ class OllamaLLM:
                 "format": schema,  # Ollama structured outputs: constrain to the JSON schema
                 "think": False,  # qwen3 would otherwise spend its budget on hidden reasoning
                 "stream": False,
-                "options": {"temperature": 0},
+                "options": self.options,
             },
         )
         try:

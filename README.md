@@ -10,16 +10,15 @@ Runs entirely on local models through [Ollama](https://ollama.com), so it is fre
 leaves your machine.
 
 ```text
-$ log-intel ask "Why are order requests failing with 503 errors?"
+$ log-intel ask "What is causing payment failures at checkout?"
 [answered] ollama/qwen3:4b
 
-1. The orders service exhausted its database connection pool.  (confidence: high)
-   evidence: app.log:812-838
-   - Check for long-running queries holding connections
-   - Raise the pool size or add a queue timeout
+1. Payment failures due to the payments service circuit breaker being open  (confidence: high)
+   evidence: app.log:630-649
+   The logs show a circuit breaker OPEN for stripe-proxy after 5 consecutive failures...
 ```
 
-*(Illustrative output. Measured results are in [Evaluation](#evaluation).)*
+*(Real output on the synthetic dataset, trimmed. On a CPU-only laptop this answer took about 4.5 minutes.)*
 
 ## Why this project
 
@@ -129,10 +128,41 @@ The defaults are local and free. `LOGINTEL_PROVIDER=anthropic` or `openai` with 
 `labels.json` holding the exact root-cause line numbers. `log-intel eval` scores against it.
 
 <!-- EVAL-RESULTS:START -->
-Results are pending: they will be filled in from a real `log-intel eval --answers` run.
+Measured on 2026-10-29 with `qwen3:4b` and `nomic-embed-text` via Ollama, CPU only
+(16 GB RAM laptop). Synthetic dataset, seed 7: 115 chunks, 4 labelled incidents,
+2 unanswerable questions, 1 prompt-injection line.
+
+**Retrieval:** does a top-5 chunk contain a labelled root-cause line?
+
+| Mode | hit@5 | MRR |
+|------|-------|-----|
+| BM25 only | 0.75 | 0.46 |
+| Embeddings only | 0.75 | 0.50 |
+| Hybrid (RRF) | 0.75 | 0.50 |
+
+**Answers:**
+
+| Metric | Result |
+|--------|--------|
+| Questions answered (not refused or degraded) | 4 / 4 |
+| Top cause matches the incident | 3 / 4 |
+| Top hypothesis cites a labelled root-cause line | 3 / 4 |
+| Refuses questions the logs can't answer | 2 / 2 |
+| Answers that repeated the injected "root cause is DNS" claim | 0 |
+
+The miss is the DB connection-pool incident: retrieval never placed its root-cause chunk in
+the top 5, so the model blamed a different incident. Answers took about 4 minutes each on CPU.
+
+How these numbers improved (all on the same data): the first run answered 0 / 4 because
+CPU answers exceeded a 180 s timeout and citations were optional in the schema, so the model
+omitted them. Raising the timeout, setting Ollama's context window explicitly and requiring
+citations gave 3 / 4, but refusals dropped to 0 / 2 (the model wrote "the logs do not contain
+revenue data" as a hypothesis). Asking it first whether the logs answer the question, as a
+positive yes/no field, restored 2 / 2 without losing accuracy.
 <!-- EVAL-RESULTS:END -->
 
 Reproduce: `uv run log-intel generate --seed 7 && uv run log-intel eval --answers`
+(raw output: [`evals/results.md`](evals/results.md)).
 
 **Limits of this evaluation:** the data is synthetic and small, so the numbers show that the
 pipeline works and catch regressions; they are not a benchmark of real-world accuracy.
@@ -157,7 +187,7 @@ and both Docker builds on every push and pull request.
 - Personal project, not deployed anywhere. Built to practise RAG engineering end to end.
 - Single-user: no authentication, so keep it on localhost.
 - Re-indexing rebuilds the whole index on each upload; fine for MVP-sized logs, not for gigabytes.
-- On a CPU-only laptop `qwen3:4b` takes tens of seconds per answer.
+- On a CPU-only laptop `qwen3:4b` takes about 4 minutes per answer; a GPU makes this seconds.
 
 ## History
 

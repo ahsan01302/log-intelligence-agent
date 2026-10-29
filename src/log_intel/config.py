@@ -33,5 +33,11 @@ class Settings(BaseSettings):
     max_chunk_lines: int = Field(default=40, gt=0)
     chunk_strategy: Literal["time", "request"] = "time"
 
-    llm_timeout_s: float = Field(default=180.0, gt=0)
+    # CPU-only local models need minutes for a ~2.5k-token prompt; a short timeout turned
+    # every synthetic-set question into degraded mode.
+    llm_timeout_s: float = Field(default=600.0, gt=0)
+    # Set explicitly: if Ollama's default context is smaller than the prompt, it silently
+    # drops the start of the input, i.e. the log evidence.
+    llm_num_ctx: int = Field(default=8192, ge=2048)
+    llm_max_tokens: int = Field(default=1024, ge=256)
     embed_batch_size: int = Field(default=32, gt=0)

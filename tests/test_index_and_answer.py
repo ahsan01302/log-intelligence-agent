@@ -64,7 +64,7 @@ def _hits(chunks, n=3):
 
 def _reply(citations, insufficient=False, cause="db connection pool exhausted"):
     return {
-        "insufficient_evidence": insufficient,
+        "logs_answer_the_question": not insufficient,
         "hypotheses": []
         if insufficient
         else [
@@ -135,7 +135,7 @@ def test_schema_sent_to_the_model_requires_citations():
 
 def test_reply_without_citations_is_retried_not_silently_dropped(chunks):
     no_cites = {
-        "insufficient_evidence": False,
+        "logs_answer_the_question": True,
         "hypotheses": [
             {"cause": "pool", "explanation": "", "confidence": "high", "next_steps": []}
         ],
@@ -143,3 +143,24 @@ def test_reply_without_citations_is_retried_not_silently_dropped(chunks):
     llm = FakeLLM(no_cites, _reply(["C1"]))
     assert answer_question("why?", _hits(chunks), llm).status == "answered"
     assert len(llm.calls) == 2
+
+
+def test_repeated_citations_are_listed_once(chunks):
+    a = answer_question("why?", _hits(chunks), FakeLLM(_reply(["C2", "C1", "C2"])))
+    assert [c.chunk_id for c in a.hypotheses[0].citations] == ["C2", "C1"]
+
+
+def test_model_decides_answerability_first_with_a_positive_field():
+    # Regression: with "insufficient_evidence", qwen3 wrote refusals ("the logs do not
+    # contain revenue data") as hypotheses instead of setting the flag.
+    props = list(LLMOutput.model_json_schema()["properties"])
+    assert props[0] == "logs_answer_the_question"
+    assert "insufficient_evidence" not in props
+    assert "never" in SYSTEM_PROMPT.lower() and "logs do not" in SYSTEM_PROMPT
+
+
+def test_hypotheses_are_ignored_when_model_says_logs_do_not_answer(chunks):
+    reply = _reply(["C1"])
+    reply["logs_answer_the_question"] = False
+    a = answer_question("revenue?", _hits(chunks), FakeLLM(reply))
+    assert a.status == "insufficient_evidence" and not a.hypotheses

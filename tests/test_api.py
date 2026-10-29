@@ -16,7 +16,7 @@ def REPLY(prompt):
     # Cite the first chunk the model was actually shown.
     first = re.search(r'<log_chunk id="(C\d+)"', prompt)[1]
     return {
-        "insufficient_evidence": False,
+        "logs_answer_the_question": True,
         "hypotheses": [
             {
                 "cause": "pool exhausted",
@@ -156,6 +156,8 @@ def test_ollama_request_shape_and_think_stripping(settings):
     assert (
         seen["think"] is False and seen["stream"] is False and seen["format"] == {"type": "object"}
     )
+    # Context window is set explicitly so Ollama never silently truncates the log evidence.
+    assert seen["options"] == {"temperature": 0, "num_ctx": 8192, "num_predict": 1024}
 
 
 def test_ollama_errors_become_provider_errors(settings):
