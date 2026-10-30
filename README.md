@@ -1,5 +1,6 @@
 # Log Intelligence Agent
 
+[![CI](https://github.com/ahsan01302/log-intelligence-agent/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ahsan01302/log-intelligence-agent/actions/workflows/ci.yml)
 ![status: personal project](https://img.shields.io/badge/status-personal%20project-blue)
 ![python 3.12](https://img.shields.io/badge/python-3.12-blue)
 ![license: MIT](https://img.shields.io/badge/license-MIT-green)

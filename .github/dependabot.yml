@@ -1,0 +1,38 @@
+# Weekly dependency update PRs, grouped per ecosystem so there is at most one PR each.
+# CI runs on every PR, so an update is only merged once tests and builds pass.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      python:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    groups:
+      angular:
+        patterns: ["@angular/*", "@angular-devkit/*"]
+      frontend:
+        patterns: ["*"]
+        exclude-patterns: ["@angular/*", "@angular-devkit/*"]
+
+  - package-ecosystem: docker
+    directories: [/, /frontend]
+    schedule:
+      interval: weekly
+    groups:
+      base-images:
+        patterns: ["*"]
